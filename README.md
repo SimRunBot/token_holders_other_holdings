@@ -8,9 +8,11 @@ Entering an Ethplorer API-Key is optional, as the provided one is used by defaul
 
 
 ## Libraries used:
-ui-neumorphism
-Axion
+[ui-neumorphism](https://github.com/AKAspanion/ui-neumorphism)\
+Axion\
 
+## API used:
+[Ethplorer](https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API)
 ## Create React App
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app)
 
