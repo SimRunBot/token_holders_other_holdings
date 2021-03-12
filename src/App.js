@@ -8,12 +8,9 @@ import {
   Button,
   Card,
   CardContent,
-  Divider,
   ListItemGroup,
   ListItem,
   TextField,
-  H3,
-  H4,
   H5,
   H6,
   Body1,
@@ -494,7 +491,7 @@ function App() {
     });
   }
 	
-  function darkModeToggle(event){
+  function darkModeToggle(event) {
     setDarkMode(!darkMode);
   }
 
