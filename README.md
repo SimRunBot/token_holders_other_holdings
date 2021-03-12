@@ -2,8 +2,8 @@
 # [https://simrunbot.github.io/token_holders_other_holdings/](https://simrunbot.github.io/token_holders_other_holdings/)
 
 ## What this App does
-You can input an ERC-20 Token Address and in response you get the top 10 holders of that token (adjustable to 1-1000 via number of holders input field).
-After that you can click on "Show Holders other tokens" to display the other tokens held by that particular address.
+You can input an ERC-20 Token Address and in response you get the top 10 holders of that token (adjustable to 1-1000 via number of holders input field).\
+After that you can click on "Show Holders other tokens" to display the other tokens held by that particular address.\
 Entering an Ethplorer API-Key is optional, as the provided one is used by default, but entering your own will make sure you will not encounter network ressource limits so fast.
 
 

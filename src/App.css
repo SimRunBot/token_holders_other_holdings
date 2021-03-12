@@ -1,9 +1,49 @@
 .App {
   text-align: center;
+  padding-top: 15px;
+  height: 100;
+}
+
+.addressInputContainer{
+  margin:0px auto;
+}
+
+div{
+  margin:0px auto;
 }
 
 
-.App-link {
-  color: #61dafb;
+.TokenInfoComponent-container{
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
+.UserInput-container{
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+}
+
+.HolderListComponent-container{
+  margin-bottom: 15px;
+}
+
+.HoldersOtherHoldingsComponent-container{
+  margin-bottom: 10px;
+}
+
+.ListItem-class{
+  margin-bottom: 10px;
+  margin-right: 20px;
+}
+
+input{
+  text-align: center;
+}
+
+.showOtherTokensButton{
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+.OtherTokenListItem-class{
+  margin-top: 15px;
+}
