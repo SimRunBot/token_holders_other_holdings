@@ -10,12 +10,15 @@ import {
   CardContent,
   ListItemGroup,
   ListItem,
-  TextField,
   H5,
   H6,
   Body1,
   Alert
   } from 'ui-neumorphism';
+
+import AddressInput from './components/AddressInput';
+import ApiKeyInput from './components/ApiKeyInput';
+import LimitHolderInput from './components/LimitHolderInput';
 
 function App() {
 
@@ -128,58 +131,6 @@ function App() {
   }
 
   /** INPUT Components **/
-  
-  function AddressInputComponent(props){
-	  return(
-	    <>
-	      <h2> ERC20 Token Address </h2>
-        <TextField 
-          rounded
-          width={500} 
-          type="text" 
-          onChange={handleTokenAddressChange} />
-        <p> { appState.tokenHolders? 
-              "" 
-              : "Ex.: 0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30" } 
-        </p>
-		  </>
-	  );
-  }
-  
-  function ApiKeyInputComponent(props){
-	  return(
-	    <>
-        <h2>API-Key</h2>
-        <TextField 
-          rounded
-          type="text" 
-          placeholder={apiKey} 
-          onChange={handleApiKeyChange} />
-        <p> { appState.tokenHolders? 
-              "" 
-              : "Ex.: EK-nYME2-u6tTYfo-L5LES" } 
-        </p>
-		  </>
-	  );
-  }
-  
-  function LimitHolderInputComponent(props){
-	  return (
-		<>
-		  <h2> # of Top Holders </h2>
-		  <TextField 
-        rounded
-        width={100} 
-        type="text" 
-        placeholder="10" 
-        onChange={handleLimitHoldersChange} />
-          <p> { appState.tokenHolders? 
-                  "" 
-                  : "1-1000" } 
-          </p>
-		</>
-	  );
-  }
   
   
   /** OUTPUT Components **/
@@ -516,21 +467,10 @@ function App() {
               {!darkMode?"dark-mode":"light-mode"}
           </Button>
 
-          {AddressInputComponent()}
-
-          
-          
-
-          <Card 
-            dark={darkMode} 
-            rounded
-            flat
-            width={500} 
-            className="InputComponent-container">
-              {ApiKeyInputComponent()}
-          </Card>
-
-          
+          <AddressInput 
+            handleTokenAddressChange
+            tokenHolders={appState.tokenHolders}
+          />
 
           <Card 
             dark={darkMode} 
@@ -538,9 +478,24 @@ function App() {
             flat
             width={500} 
             className="InputComponent-container">
-              {LimitHolderInputComponent()}
+              <ApiKeyInput
+                apiKey
+                handleApiKeyChange
+                tokenHolders = { appState.tokenHolders }
+              />
           </Card>
 
+          <Card 
+            dark={darkMode} 
+            rounded
+            flat
+            width={500} 
+            className="InputComponent-container">
+              <LimitHolderInput
+                handleLimitHoldersChange
+                tokenHolders = { appState.tokenHolders }
+              />
+          </Card>
           
           <Card 
             dark={darkMode}
