@@ -22,11 +22,8 @@ import LimitHolderInput from './components/LimitHolderInput';
 
 function App() {
 
-  /* input state variables */
-  const [appState, setAppState] = useState({
-    loading: false,
-	  tokenHolders: null
-   });
+  const [loading, setLoading] = useState(false);
+  const [tokenHolders, setTokenHolders] = useState(null);
   const [input, setInput] = useState("");
   const [limitHolders, setLimitHolders] = useState(10);
   const [apiKey, setApiKey] = useState("EK-nYME2-u6tTYfo-L5LES");
@@ -43,7 +40,7 @@ function App() {
       and exit out if they do to prevent failed api request*/
       if (addressInputError === undefined || addressInputError || limitInputError ) return ;
       
-      setAppState({ loading:true});
+      setLoading(true);
 
       async function getTokenHoldersAndInfo(){
         const tokenholdersApiUrl = 
@@ -56,9 +53,9 @@ function App() {
           axios.get(tokenAddressApiUrl)])
             .then(axios.spread(
               (holdersResponse, tokenAddressResponse) => {
-                setAppState({ loading: false, 
-                              tokenHolders: holdersResponse.data.holders
-                });
+                setLoading(false);
+                setTokenHolders(holdersResponse.data.holders);
+
                 /* saving only the tokenInfo in state, as rest is not relevant */
                 setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
                 }))
@@ -70,7 +67,7 @@ function App() {
       getTokenHoldersAndInfo();
 
       /** cleanup function **/
-		  return () => { setAppState({ loading:false});  };
+		  return () => { setLoading(false) };
 
       }, 
     /** useEffect dependencies to only call useEffect when these change **/ 
@@ -392,7 +389,7 @@ function App() {
 	  /** Lists the top (# of) Holders of input token address  **/
     
 
-    if (props.holders == null|| props.tokenInfo == null) return "";
+    if (props.tokenHolders == null|| props.tokenInfo == null) return "";
     return (
       <>
         <H5 
@@ -469,7 +466,7 @@ function App() {
 
           <AddressInput 
             handleTokenAddressChange
-            tokenHolders={appState.tokenHolders}
+            tokenHolders
           />
 
           <Card 
@@ -481,7 +478,7 @@ function App() {
               <ApiKeyInput
                 apiKey
                 handleApiKeyChange
-                tokenHolders = { appState.tokenHolders }
+                tokenHolders
               />
           </Card>
 
@@ -493,7 +490,7 @@ function App() {
             className="InputComponent-container">
               <LimitHolderInput
                 handleLimitHoldersChange
-                tokenHolders = { appState.tokenHolders }
+                tokenHolders
               />
           </Card>
           
@@ -525,7 +522,7 @@ function App() {
         width={700}
         className="HolderListComponent-container">
           <HolderListComponent 
-            holders={appState.tokenHolders}
+            tokenHolders
             numHolders={limitHolders}
             tokenInfo={inputTokenInfo}
             apiKey={apiKey}/>
