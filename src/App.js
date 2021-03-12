@@ -35,45 +35,36 @@ function App() {
   const [networkErrorOccured, setNetworkErrorOccured] = useState(false);
   const [networkError, setNetworkError] = useState(null);
 
-  useEffect( () => {
+  const baseUrl = "https://api.ethplorer.io";
+  const tokenholdersApiUrl = () => `${baseUrl}/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
+  const tokenAddressApiUrl = () => `${baseUrl}/getAddressInfo/${input}?apiKey=${apiKey}`;
+  const tokenHoldersRequest = () => axios.get(tokenholdersApiUrl());
+  const tokenAddressRequest = () => axios.get(tokenAddressApiUrl());
+  const tokenRequests = () => [ tokenHoldersRequest(), tokenAddressRequest() ];
+
+  const inputIsInvalid = () => addressInputError || limitInputError
+
+  useEffect(() => {
 
     if (inputIsInvalid()) return ;
     setLoading(true);
 
-      async function getTokenHoldersAndInfo() {
-        const tokenholdersApiUrl = 
-          `https://api.ethplorer.io/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
-        const tokenAddressApiUrl = 
-          `https://api.ethplorer.io/getAddressInfo/${input}?apiKey=${apiKey}`;
-          
-        axios.all([
-          axios.get(tokenholdersApiUrl),
-          axios.get(tokenAddressApiUrl)])
-            .then(axios.spread(
-              (holdersResponse, tokenAddressResponse) => {
-                setLoading(false);
-                setTokenHolders(holdersResponse.data.holders);
-
-                /* saving only the tokenInfo in state, as rest is not relevant */
-                setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
-                }))
-            .catch((error)=> {
-              handleNetworkError(error);
-            });
-      }
-      /** solution to call async function inside useEffect **/
-      getTokenHoldersAndInfo();
-
-      /** cleanup function **/
-		  return () => { setLoading(false) };
-
-      }, 
-    /** useEffect dependencies to only call useEffect when these change **/ 
-    [input, apiKey, limitHolders]);
-  
-  /** validates input */
-  const inputIsInvalid = () => addressInputError || limitInputError
-
+    async function getTokenHoldersAndInfo() {
+      axios
+        .all(tokenRequests())
+        .then(axios.spread(
+          (holdersResponse, tokenAddressResponse) => {
+            setLoading(false);
+            setTokenHolders(holdersResponse.data.holders);
+            setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
+          }
+        )
+      ).catch( error => handleNetworkError(error) );
+    }
+    getTokenHoldersAndInfo();
+    return () => setLoading(false);
+  },
+  [input, apiKey, limitHolders]); 
 
   /** Handler Functions for Input changes and simple input validation **/
   function handleTokenAddressChange(changedInput) {
@@ -126,9 +117,6 @@ function App() {
     }
     console.log(error.config);
   }
-
-  /** INPUT Components **/
-  
   
   /** OUTPUT Components **/
 
