@@ -29,20 +29,18 @@ function App() {
   const [apiKey, setApiKey] = useState("EK-nYME2-u6tTYfo-L5LES");
   const [darkMode, setDarkMode] = useState(false);
   const [inputTokenInfo, setInputTokenInfo] = useState(null);
-  /* Error state variables */
-  const [addressInputError,setAddressInputError] = useState();
-  const [limitInputError,setLimitInputError] = useState(false);
+  
+  const [addressInputError, setAddressInputError] = useState(false);
+  const [limitInputError, setLimitInputError] = useState(false);
   const [networkErrorOccured, setNetworkErrorOccured] = useState(false);
   const [networkError, setNetworkError] = useState(null);
 
   useEffect( () => {
-      /* checks if input fields contain errors 
-      and exit out if they do to prevent failed api request*/
-      if (addressInputError === undefined || addressInputError || limitInputError ) return ;
-      
-      setLoading(true);
 
-      async function getTokenHoldersAndInfo(){
+    if (inputIsInvalid()) return ;
+    setLoading(true);
+
+      async function getTokenHoldersAndInfo() {
         const tokenholdersApiUrl = 
           `https://api.ethplorer.io/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
         const tokenAddressApiUrl = 
@@ -73,9 +71,11 @@ function App() {
     /** useEffect dependencies to only call useEffect when these change **/ 
     [input, apiKey, limitHolders]);
   
+  /** validates input */
+  const inputIsInvalid = () => addressInputError || limitInputError
+
 
   /** Handler Functions for Input changes and simple input validation **/
-  
   function handleTokenAddressChange(changedInput) {
 	  const newInput = changedInput.event.target.value;
 	  /** all ethereum token addresses are 42 characters long **/
