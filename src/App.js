@@ -3,26 +3,27 @@ import axios from 'axios';
 import './App.css';
 import 'ui-neumorphism/dist/index.css';
 /* UI library component imports */
-import { overrideThemeVariables } from 'ui-neumorphism';
+/* for changeTheme function:
+   import { overrideThemeVariables } from 'ui-neumorphism'; */
 import { 
   Button,
-  Card,
-  CardContent,
-  ListItemGroup,
-  ListItem,
-  H5,
-  H6,
-  Body1,
-  Alert
+  Card
   } from 'ui-neumorphism';
 
+/* Input Components */
 import AddressInput from './components/AddressInput';
 import ApiKeyInput from './components/ApiKeyInput';
 import LimitHolderInput from './components/LimitHolderInput';
 
+/* Output Components */
+import ErrorOutput from "./components/ErrorOutput.js";
+import TokenInfo from "./components/TokenInfo.js";
+import HolderList from "./components/HolderList.js";
+
+
+
 function App() {
 
-  const [loading, setLoading] = useState(false);
   const [tokenHolders, setTokenHolders] = useState(null);
   const [input, setInput] = useState("");
   const [limitHolders, setLimitHolders] = useState(10);
@@ -35,6 +36,7 @@ function App() {
   const [networkErrorOccured, setNetworkErrorOccured] = useState(false);
   const [networkError, setNetworkError] = useState(null);
 
+  // axios request urls
   const baseUrl = "https://api.ethplorer.io";
   const tokenholdersApiUrl = () => `${baseUrl}/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
   const tokenAddressApiUrl = () => `${baseUrl}/getAddressInfo/${input}?apiKey=${apiKey}`;
@@ -47,22 +49,24 @@ function App() {
   useEffect(() => {
 
     if (inputIsInvalid() || input == "") return ;
-    setLoading(true);
+    let isMounted = true;
 
     async function getTokenHoldersAndInfo() {
       axios
         .all(tokenRequests())
         .then(axios.spread(
           (holdersResponse, tokenAddressResponse) => {
-            setLoading(false);
-            setTokenHolders(holdersResponse.data.holders);
-            setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
+            if(isMounted){
+              setTokenHolders(holdersResponse.data.holders);
+              setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
+            }
+            
           }
         )
       ).catch( error => handleNetworkError(error) );
     }
     getTokenHoldersAndInfo();
-    return () => setLoading(false);
+    return () => isMounted = false;
   },
   [input, apiKey, limitHolders]); 
 
@@ -119,315 +123,13 @@ function App() {
     console.log(error.config);
   }
   
-  /** OUTPUT Components **/
-
-  function ErrorComponent(props){
-    /** renders possible input errors to the user */
-    
-    return(
-      <>
-        {props.addressError?
-          <Alert 
-            dark={darkMode}
-            type="error">
-              Input Error : invalid Token Address input
-          </Alert>
-          : ""
-        }
-
-        {props.limitError?
-          <Alert 
-            dark={darkMode}
-            type="error">
-              Input Error : only integers between 1-1000 allowed for # of Top Holders
-          </Alert>
-          : ""
-        }
-
-        {props.networkErrorHappened?
-          <Alert 
-            dark={darkMode}
-            type="error">
-              Network Error occured, Check Console { (props.networkErrorObject == null)? "" : props.networkErrorObject.message }
-          </Alert>
-          : ""
-        }
-
-      </>
-    );
-  }
-  
-  function TokenInfoComponent(props){
-	  /** shows info about the token from address input **/
-   
-	  /**  tokenInfo only gets accessible after first API call
-     * so we do a little bit of conditional rendering here **/
-     if (!props.tokenInfo) return "";
-	  return(
-	    <>
-        {props.tokenInfo?
-          <CardContent
-            dark={darkMode}>
-              <H6> {`${props.tokenInfo.name} (${props.tokenInfo.symbol})`} </H6>
-              <H6> Price: {props.tokenInfo.price.rate? 
-                            props.tokenInfo.price.rate.toFixed(2)
-                            :  "unknown price"} $ 
-              </H6>
-              <Body1>
-                Owner: {props.tokenInfo.owner}
-              </Body1>
-              <Body1>  
-                Holders: {props.tokenInfo.holdersCount}
-              </Body1>
-            
-          </CardContent>
-          : ""
-          }
-		  </>
-		);
-	  
-  }
-
-  function OtherTokenListComponent(props){
-    /* Holds List of the other tokens held by parent address */
-    return(
-      <>
-        {props.otherTokens.map((otherToken, index) => {
-          return(
-            <ListItem
-              key={index}
-              dark={darkMode}
-              active
-              raised
-              rounded
-              className="OtherTokenListItem-class"> 
-
-                <OtherTokenComponent
-                  address={otherToken.tokenInfo.address}
-                  name={otherToken.tokenInfo.name}
-                  index={index}
-                  symbol={otherToken.tokenInfo.symbol}
-                  balance={otherToken.balance}
-                  decimals={otherToken.tokenInfo.decimals > 0? otherToken.tokenInfo.decimals : 1}
-                  price={otherToken.tokenInfo.price.rate}/>
-
-            </ListItem>
-          );
-        })}
-      </>
-    );
-  }
-  
-  function OtherTokenComponent(props){
-	  /** gives info about the other token that parent hodler has **/
-    
-    const otherTokenBalance = (props.balance / 10 ** props.decimals).toFixed(5);
-    return (
-      <> 
-        <H6 dark={darkMode}>
-          <a 
-            href={`https://etherscan.io/token/${props.address}`} 
-            target="_blank">
-              {`${props.name} (${props.symbol})`}
-          </a>
-        </H6>
-        <H6 
-          dark={darkMode}> 
-            Tokens: {otherTokenBalance} 
-        </H6>
-        <H6 
-          dark={darkMode}> 
-            {props.price?
-              `Value: ${(props.price * otherTokenBalance).toFixed(2)} $` 
-              : `price rate unknown`} 
-        </H6>
-      </>
-    );
-  }
-  
-  function HoldersOtherHoldingsComponent(props){
-	  /** Shows other Tokens of parent holder 
-     *  address once UI Button is pressed **/
-
-    /* tokens are sorted based on value in descending order
-        calculated by custom comparison function  */
-   
-    const sortedOtherTokens = props.tokens.sort(
-        (a,b) => {
-          if(a.tokenInfo.price && b.tokenInfo.price){
-            return ( 
-              ( (b.balance / 10 ** b.tokenInfo.decimals ) 
-              * b.tokenInfo.price.rate 
-              - (a.balance / 10 ** a.tokenInfo.decimals ) 
-              * a.tokenInfo.price.rate) 
-              );
-          }
-          else if(a.tokenInfo.price && !b.tokenInfo.price){
-            return -1;
-          }
-          else if(!a.tokenInfo.price && b.tokenInfo.price){
-            return 1;
-          }
-          else {
-            return 0;
-          }
-        }
-    );
-
-	  return(
-	    <>
-        <H6 dark={darkMode}>{props.tokens.length > 1 ?
-            `${props.tokens.length} other Tokens held by this address`
-            : `${props.tokens.length} other Token held by this address`
-            }  
-        </H6>
-        <OtherTokenListComponent
-          otherTokens={props.tokens}/>
-      </>
-	    );
-  }
-  
-  
-  function HolderListItemComponent(props){
-	  /** is showing the holder of token from address input **/
-	  const [showOtherTokens, setShowOtherTokens] = useState(false);
-	  const [showOtherTokensButtonPressed, setShowOtherTokensButtonPressed] = useState(false);
-	  const [tokenHoldersOtherHoldings, setTokenHoldersOtherHoldings] = useState();
-	  
-	  useEffect( () => {
-		 
-		  /** condition to avoid the warning of hook usage before component mounting **/
-		  let isMounted = true;
-		  /** prevent apicall if not intended **/
-		  if(!showOtherTokens) return ;
-		  /** prevent apicall of wrong address or apiKey input **/
-		  if (!props.address === "" || !props.address || !props.apiKey){
-			  return ;
-		    }
-		  
-		  async function getTokens(){
-			  const addressInfoApiUrl = 
-          `https://api.ethplorer.io/getAddressInfo/${props.address}?apiKey=${props.apiKey}`;
-		      await axios.get(addressInfoApiUrl)
-		        .then((addressInfoResponse) => {
-			        if (isMounted) setTokenHoldersOtherHoldings(addressInfoResponse.data);
-              })
-            .catch((error)=> {
-              handleNetworkError(error);
-            });
-		    }
-
-		  getTokens();
-			/** cleanup function **/
-		  return () => { isMounted = false };
-		 } 
-		,[showOtherTokens]);
-		
-	  function handleShowOtherTokensButtonPressed(event){
-		  setShowOtherTokens(!showOtherTokens);
-		  setShowOtherTokensButtonPressed(!showOtherTokensButtonPressed);
-	  }
-
-		const holdersBalance = (props.balance/ 10 ** props.decimals).toFixed(2);
-    const holdersValue = (props.price * holdersBalance).toFixed(2);
-
-	  /**  tokenHoldersOtherHoldings only gets accessible after first apicall  **/
-    /** and holders other tokens only after pressing the listitems button **/  
-	  return(
-      <>
-        <H5 dark={darkMode}> #{props.index + 1} </H5>
-        <H5 dark={darkMode}> Share: {props.share} % </H5>
-        <H5 dark={darkMode}> 
-          Tokens: {holdersBalance}
-        </H5>
-        <H5 dark={darkMode}> Value: {holdersValue} $ </H5>
-        <H5 dark={darkMode}> 
-          Address: <a 
-                    href={`https://etherscan.io/address/${props.address}`} 
-                    target="_blank">
-                      {props.address}
-                  </a> 
-        </H5>
-        
-
-        <Button 
-          className="showOtherTokensButton"
-          color={showOtherTokensButtonPressed? 'var(--black)' : 'var(--white)'}
-          bgColor={showOtherTokensButtonPressed? 'var(--primary-red)' : 'var(--primary)'}
-          dark={darkMode}
-          rounded
-          onClick={handleShowOtherTokensButtonPressed}> 
-            {!showOtherTokens? "Show Holders other tokens" : "Hide Holders other tokens" } 
-        </Button>
-          {tokenHoldersOtherHoldings && showOtherTokens?
-            <Card
-              flat
-              width={400}
-              dark={darkMode}
-              className="HoldersOtherHoldingsComponent-container"
-              >
-                <HoldersOtherHoldingsComponent  
-                tokens={tokenHoldersOtherHoldings.tokens} />   
-            </Card>
-            : ""
-            }
-		    </>
-		  );
-  }
-  
-  function HolderListComponent(props){
-	  /** Lists the top (# of) Holders of input token address  **/
-    
-
-    if (props.tokenHolders == null|| props.tokenInfo == null) return "";
-    return (
-      <>
-        <H5 
-          className='list-head'
-          dark={darkMode}>
-            Tokens Top {props.numHolders} Holders
-        </H5>
-
-        <ListItemGroup
-          rounded
-          dark={darkMode}
-          raised>
-                    
-            {props.tokenHolders.map((holder, index) => {
-              return(
-                <ListItem
-                  className="ListItem-class"
-                  active
-                  dark={darkMode}
-                  key={index}
-                  raised
-                  rounded>
-                    <HolderListItemComponent
-                      index={index}
-                      key={holder["address"] + index}
-                      decimals={props.tokenInfo.decimals ? props.tokenInfo.decimals : "18 "} 
-                      price={props.tokenInfo.price.rate ? props.tokenInfo.price.rate : "1 "} 
-                      address={holder["address"]}
-                      balance={holder["balance"]}
-                      share={holder["share"]}
-                      apiKey={props.apiKey}/>
-                </ListItem>
-                  );
-                }
-                )
-              }
-        </ListItemGroup>
-      </>
-      );
-  }
-
- 
-  function changeTheme(props){
-	   /** This function can be used to override css values */
+  /* function changeTheme(props){
+	   // This function can be used to override css values 
+     // requires import of the following function
 	  overrideThemeVariables({
       '--light-bg': '#E9B7B9'
     });
-  }
+  } **/
 	
   function darkModeToggle(event) {
     setDarkMode(!darkMode);
@@ -488,7 +190,8 @@ function App() {
             dark={darkMode}
             width={200} 
             className="TokenInfoComponent-container">
-              <TokenInfoComponent 
+              <TokenInfo 
+                darkMode={darkMode}
                 tokenInfo={inputTokenInfo} />
           </Card>
 
@@ -496,7 +199,8 @@ function App() {
             dark={darkMode}
             width={300} 
             className="ErrorComponent-container">
-              <ErrorComponent 
+              <ErrorOutput
+                darkMode={darkMode} 
                 addressError={addressInputError} 
                 limitError={limitInputError} 
                 networkErrorHappened={networkErrorOccured}
@@ -511,11 +215,13 @@ function App() {
         rounded
         width={700}
         className="HolderListComponent-container">
-          <HolderListComponent 
+          <HolderList
+            darkMode={darkMode}
             tokenHolders={tokenHolders}
             numHolders={limitHolders}
             tokenInfo={inputTokenInfo}
-            apiKey={apiKey}/>
+            apiKey={apiKey}
+            handleNetworkError={handleNetworkError}/>
       </Card>
       
       <footer>
