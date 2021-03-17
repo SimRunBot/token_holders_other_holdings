@@ -343,8 +343,8 @@ function App() {
 	  return(
 	    <>
         <H6 dark={darkMode}>{props.tokens.length > 1 ?
-            `${props.tokens.length} other Tokens on this Holders address`
-            : `${props.tokens.length} other Token on this Holders address`
+            `${props.tokens.length} other Tokens held by this address`
+            : `${props.tokens.length} other Token held by this address`
             }  
         </H6>
         <OtherTokenListComponent
@@ -429,6 +429,7 @@ function App() {
             <Card
               flat
               width={400}
+              dark={darkMode}
               className="HoldersOtherHoldingsComponent-container"
               >
                 <HoldersOtherHoldingsComponent  
