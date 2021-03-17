@@ -8,77 +8,65 @@ import {
   Button,
   Card,
   CardContent,
-  Divider,
   ListItemGroup,
   ListItem,
-  TextField,
-  H3,
-  H4,
   H5,
   H6,
   Body1,
   Alert
   } from 'ui-neumorphism';
 
+import AddressInput from './components/AddressInput';
+import ApiKeyInput from './components/ApiKeyInput';
+import LimitHolderInput from './components/LimitHolderInput';
+
 function App() {
 
-  /* input state variables */
-  const [appState, setAppState] = useState({
-    loading: false,
-	  tokenHolders: null
-   });
+  const [loading, setLoading] = useState(false);
+  const [tokenHolders, setTokenHolders] = useState(null);
   const [input, setInput] = useState("");
   const [limitHolders, setLimitHolders] = useState(10);
   const [apiKey, setApiKey] = useState("EK-nYME2-u6tTYfo-L5LES");
   const [darkMode, setDarkMode] = useState(false);
   const [inputTokenInfo, setInputTokenInfo] = useState(null);
-  /* Error state variables */
-  const [addressInputError,setAddressInputError] = useState();
-  const [limitInputError,setLimitInputError] = useState(false);
+  
+  const [addressInputError, setAddressInputError] = useState(false);
+  const [limitInputError, setLimitInputError] = useState(false);
   const [networkErrorOccured, setNetworkErrorOccured] = useState(false);
   const [networkError, setNetworkError] = useState(null);
 
-  useEffect( () => {
-      /* checks if input fields contain errors 
-      and exit out if they do to prevent failed api request*/
-      if (addressInputError === undefined || addressInputError || limitInputError ) return ;
-      
-      setAppState({ loading:true});
+  const baseUrl = "https://api.ethplorer.io";
+  const tokenholdersApiUrl = () => `${baseUrl}/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
+  const tokenAddressApiUrl = () => `${baseUrl}/getAddressInfo/${input}?apiKey=${apiKey}`;
+  const tokenHoldersRequest = () => axios.get(tokenholdersApiUrl());
+  const tokenAddressRequest = () => axios.get(tokenAddressApiUrl());
+  const tokenRequests = () => [ tokenHoldersRequest(), tokenAddressRequest() ];
 
-      async function getTokenHoldersAndInfo(){
-        const tokenholdersApiUrl = 
-          `https://api.ethplorer.io/getTopTokenHolders/${input}?apiKey=${apiKey}&limit=${limitHolders}`;
-        const tokenAddressApiUrl = 
-          `https://api.ethplorer.io/getAddressInfo/${input}?apiKey=${apiKey}`;
-          
-        axios.all([
-          axios.get(tokenholdersApiUrl),
-          axios.get(tokenAddressApiUrl)])
-            .then(axios.spread(
-              (holdersResponse, tokenAddressResponse) => {
-                setAppState({ loading: false, 
-                              tokenHolders: holdersResponse.data.holders
-                });
-                /* saving only the tokenInfo in state, as rest is not relevant */
-                setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
-                }))
-            .catch((error)=> {
-              handleNetworkError(error);
-            });
-      }
-      /** solution to call async function inside useEffect **/
-      getTokenHoldersAndInfo();
+  const inputIsInvalid = () => addressInputError || limitInputError || networkErrorOccured
 
-      /** cleanup function **/
-		  return () => { setAppState({ loading:false});  };
+  useEffect(() => {
 
-      }, 
-    /** useEffect dependencies to only call useEffect when these change **/ 
-    [input, apiKey, limitHolders]);
-  
+    if (inputIsInvalid() || input == "") return ;
+    setLoading(true);
+
+    async function getTokenHoldersAndInfo() {
+      axios
+        .all(tokenRequests())
+        .then(axios.spread(
+          (holdersResponse, tokenAddressResponse) => {
+            setLoading(false);
+            setTokenHolders(holdersResponse.data.holders);
+            setInputTokenInfo(tokenAddressResponse.data.tokenInfo);
+          }
+        )
+      ).catch( error => handleNetworkError(error) );
+    }
+    getTokenHoldersAndInfo();
+    return () => setLoading(false);
+  },
+  [input, apiKey, limitHolders]); 
 
   /** Handler Functions for Input changes and simple input validation **/
-  
   function handleTokenAddressChange(changedInput) {
 	  const newInput = changedInput.event.target.value;
 	  /** all ethereum token addresses are 42 characters long **/
@@ -112,6 +100,7 @@ function App() {
   function handleNetworkError(error){
     setNetworkErrorOccured(true);
     setNetworkError(error);
+    console.log("NETWORK ERROR");
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
@@ -129,61 +118,6 @@ function App() {
     }
     console.log(error.config);
   }
-
-  /** INPUT Components **/
-  
-  function AddressInputComponent(props){
-	  return(
-	    <>
-	      <h2> ERC20 Token Address </h2>
-        <TextField 
-          rounded
-          width={500} 
-          type="text" 
-          onChange={handleTokenAddressChange} />
-        <p> { appState.tokenHolders? 
-              "" 
-              : "Ex.: 0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30" } 
-        </p>
-		  </>
-	  );
-  }
-  
-  function ApiKeyInputComponent(props){
-	  return(
-	    <>
-        <h2>API-Key</h2>
-        <TextField 
-          rounded
-          type="text" 
-          placeholder={apiKey} 
-          onChange={handleApiKeyChange} />
-        <p> { appState.tokenHolders? 
-              "" 
-              : "Ex.: EK-nYME2-u6tTYfo-L5LES" } 
-        </p>
-		  </>
-	  );
-  }
-  
-  function LimitHolderInputComponent(props){
-	  return (
-		<>
-		  <h2> # of Top Holders </h2>
-		  <TextField 
-        rounded
-        width={100} 
-        type="text" 
-        placeholder="10" 
-        onChange={handleLimitHoldersChange} />
-          <p> { appState.tokenHolders? 
-                  "" 
-                  : "1-1000" } 
-          </p>
-		</>
-	  );
-  }
-  
   
   /** OUTPUT Components **/
 
@@ -194,7 +128,7 @@ function App() {
       <>
         {props.addressError?
           <Alert 
-            dark={darkMode?true:false}
+            dark={darkMode}
             type="error">
               Input Error : invalid Token Address input
           </Alert>
@@ -203,7 +137,7 @@ function App() {
 
         {props.limitError?
           <Alert 
-            dark={darkMode?true:false}
+            dark={darkMode}
             type="error">
               Input Error : only integers between 1-1000 allowed for # of Top Holders
           </Alert>
@@ -212,7 +146,7 @@ function App() {
 
         {props.networkErrorHappened?
           <Alert 
-            dark={ darkMode? true : false }
+            dark={darkMode}
             type="error">
               Network Error occured, Check Console { (props.networkErrorObject == null)? "" : props.networkErrorObject.message }
           </Alert>
@@ -445,7 +379,7 @@ function App() {
 	  /** Lists the top (# of) Holders of input token address  **/
     
 
-    if (props.holders == null|| props.tokenInfo == null) return "";
+    if (props.tokenHolders == null|| props.tokenInfo == null) return "";
     return (
       <>
         <H5 
@@ -459,7 +393,7 @@ function App() {
           dark={darkMode}
           raised>
                     
-            {props.holders.map((holder, index) => {
+            {props.tokenHolders.map((holder, index) => {
               return(
                 <ListItem
                   className="ListItem-class"
@@ -495,7 +429,7 @@ function App() {
     });
   }
 	
-  function darkModeToggle(event){
+  function darkModeToggle(event) {
     setDarkMode(!darkMode);
   }
 
@@ -520,21 +454,10 @@ function App() {
               {!darkMode?"dark-mode":"light-mode"}
           </Button>
 
-          {AddressInputComponent()}
-
-          
-          
-
-          <Card 
-            dark={darkMode} 
-            rounded
-            flat
-            width={500} 
-            className="InputComponent-container">
-              {ApiKeyInputComponent()}
-          </Card>
-
-          
+          <AddressInput 
+            handleTokenAddressChange={handleTokenAddressChange}
+            tokenHolders={tokenHolders}
+          />
 
           <Card 
             dark={darkMode} 
@@ -542,9 +465,24 @@ function App() {
             flat
             width={500} 
             className="InputComponent-container">
-              {LimitHolderInputComponent()}
+              <ApiKeyInput
+                apiKey={apiKey}
+                handleApiKeyChange={handleApiKeyChange}
+                tokenHolders={tokenHolders}
+              />
           </Card>
 
+          <Card 
+            dark={darkMode} 
+            rounded
+            flat
+            width={500} 
+            className="InputComponent-container">
+              <LimitHolderInput
+                handleLimitHoldersChange={handleLimitHoldersChange}
+                tokenHolders={tokenHolders}
+              />
+          </Card>
           
           <Card 
             dark={darkMode}
@@ -574,7 +512,7 @@ function App() {
         width={700}
         className="HolderListComponent-container">
           <HolderListComponent 
-            holders={appState.tokenHolders}
+            tokenHolders={tokenHolders}
             numHolders={limitHolders}
             tokenInfo={inputTokenInfo}
             apiKey={apiKey}/>
