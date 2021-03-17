@@ -42,11 +42,11 @@ function App() {
   const tokenAddressRequest = () => axios.get(tokenAddressApiUrl());
   const tokenRequests = () => [ tokenHoldersRequest(), tokenAddressRequest() ];
 
-  const inputIsInvalid = () => addressInputError || limitInputError
+  const inputIsInvalid = () => addressInputError || limitInputError || networkErrorOccured
 
   useEffect(() => {
 
-    if (inputIsInvalid()) return ;
+    if (inputIsInvalid() || input == "") return ;
     setLoading(true);
 
     async function getTokenHoldersAndInfo() {
@@ -100,6 +100,7 @@ function App() {
   function handleNetworkError(error){
     setNetworkErrorOccured(true);
     setNetworkError(error);
+    console.log("NETWORK ERROR");
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
@@ -127,7 +128,7 @@ function App() {
       <>
         {props.addressError?
           <Alert 
-            dark={darkMode?true:false}
+            dark={darkMode}
             type="error">
               Input Error : invalid Token Address input
           </Alert>
@@ -136,7 +137,7 @@ function App() {
 
         {props.limitError?
           <Alert 
-            dark={darkMode?true:false}
+            dark={darkMode}
             type="error">
               Input Error : only integers between 1-1000 allowed for # of Top Holders
           </Alert>
@@ -145,7 +146,7 @@ function App() {
 
         {props.networkErrorHappened?
           <Alert 
-            dark={ darkMode? true : false }
+            dark={darkMode}
             type="error">
               Network Error occured, Check Console { (props.networkErrorObject == null)? "" : props.networkErrorObject.message }
           </Alert>
@@ -391,7 +392,7 @@ function App() {
           dark={darkMode}
           raised>
                     
-            {props.holders.map((holder, index) => {
+            {props.tokenHolders.map((holder, index) => {
               return(
                 <ListItem
                   className="ListItem-class"
@@ -453,8 +454,8 @@ function App() {
           </Button>
 
           <AddressInput 
-            handleTokenAddressChange
-            tokenHolders
+            handleTokenAddressChange={handleTokenAddressChange}
+            tokenHolders={tokenHolders}
           />
 
           <Card 
@@ -464,9 +465,9 @@ function App() {
             width={500} 
             className="InputComponent-container">
               <ApiKeyInput
-                apiKey
-                handleApiKeyChange
-                tokenHolders
+                apiKey={apiKey}
+                handleApiKeyChange={handleApiKeyChange}
+                tokenHolders={tokenHolders}
               />
           </Card>
 
@@ -477,8 +478,8 @@ function App() {
             width={500} 
             className="InputComponent-container">
               <LimitHolderInput
-                handleLimitHoldersChange
-                tokenHolders
+                handleLimitHoldersChange={handleLimitHoldersChange}
+                tokenHolders={tokenHolders}
               />
           </Card>
           
@@ -510,7 +511,7 @@ function App() {
         width={700}
         className="HolderListComponent-container">
           <HolderListComponent 
-            tokenHolders
+            tokenHolders={tokenHolders}
             numHolders={limitHolders}
             tokenInfo={inputTokenInfo}
             apiKey={apiKey}/>

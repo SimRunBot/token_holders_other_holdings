@@ -10,9 +10,9 @@ const LimitHolderInput = (props) =>
         type="text" 
         placeholder="10" 
         onChange={props.handleLimitHoldersChange} />
-    <p> { props.tokenHolders? 
-            "" 
-            : "1-1000" } 
+    <p> { props.tokenHolders == undefined? 
+            "1-1000"
+            :"" } 
     </p>
 </>
 

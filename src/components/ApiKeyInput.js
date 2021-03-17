@@ -10,8 +10,9 @@ const ApiKeyInput = (props) =>
             placeholder={props.apiKey} 
             onChange={props.handleApiKeyChange}
         />
-        <p> {props.tokenHolders ? 
-            "" :"Ex.: EK-nYME2-u6tTYfo-L5LES" } 
+        <p> {props.tokenHolders == undefined? 
+             "Ex.: EK-nYME2-u6tTYfo-L5LES"
+             :"" } 
         </p>
     </>
 

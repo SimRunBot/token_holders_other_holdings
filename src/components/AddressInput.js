@@ -9,9 +9,9 @@ const AddressInput = (props) =>
       width={500} 
       type="text" 
       onChange={props.handleTokenAddressChange} />
-    <p> { props.tokenHolders? 
-          "" 
-          : "Ex.: 0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30" } 
+    <p> { props.tokenHolders == undefined? 
+          "Ex.: 0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30"
+          :"" } 
     </p>
   </>
 
