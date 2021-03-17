@@ -34,8 +34,8 @@ function HoldersOtherHoldings(props){
     return(
         <>
             <H6 dark={props.darkMode}>{props.tokens.length > 1 ?
-                `${props.tokens.length} other Tokens held by this address`
-                : `${props.tokens.length} other Token held by this address`
+                `${props.tokens.length} Tokens held by this address`
+                : `${props.tokens.length} Token held by this address`
                 }  
             </H6>
             <OtherTokenList
