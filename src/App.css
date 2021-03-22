@@ -1,6 +1,7 @@
 .App {
   text-align: center;
   padding-top: 15px;
+  padding-bottom: 150px;
 }
 
 
@@ -45,5 +46,5 @@ input{
 }
 
 .footer{
-  margin-top: 220px;
+  margin-top: 330px;
 }
